@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Currency rate</title>
+  <link rel="stylesheet" type="text/css" href="loader.css">
+  <style>
+    body {
+      height: 100%;
+    }
+
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .rate {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .rate__value {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .rate__error {
+      display: none;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="rate">
+    <p class="rate__error" id="error"></p>
+    <div id="loader" class="loader">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <p class="rate__value" id="rate">Валюта не выбрана</p>
+  </div>
+</div>
+<script>
+  const errorEl = document.querySelector('#error');
+  const rateEl = document.querySelector('#rate');
+  const loaderEl = document.querySelector('#loader');
+
+  function resultHandler (rate) {
+    rateEl.style.display = 'flex'
+    rateEl.innerHTML = rate;
+    errorEl.style.display = 'none';
+  }
+
+  function errorHandler (error) {
+    errorEl.style.display = 'block';
+    errorEl.innerHTML = error;
+    rateEl.style.display = 'none';
+  }
+
+  function loadingHandler (isLoading) {
+    if (isLoading) {
+      rateEl.style.display = 'none'
+      errorEl.style.display = 'none'
+    }
+    loaderEl.style.display = isLoading ? 'inline-block' : 'none';
+  }
+
+  addEventListener("message", (e) => {
+    const currency = e.data;
+
+    if (typeof currency !== 'string') {
+      return;
+    }
+
+    loadingHandler(true);
+    fetch(`https://api.exchangerate.host/latest?base=${currency}&symbols=RUB`, {mode: "cors"})
+      .then((res) => res.json())
+      .then((data) => resultHandler(data.rates.RUB))
+      .catch((err) => errorHandler(err.message))
+      .finally(() => loadingHandler(false));
+  })
+</script>
+</body>
+</html>
